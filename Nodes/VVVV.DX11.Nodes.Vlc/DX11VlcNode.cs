@@ -143,8 +143,8 @@ namespace VVVV.Nodes.VideoPlayer
 
                 if (needreset)
                 {
-                    if (File.Exists(path))
-                    {
+                    //if (File.Exists(path))
+                    //{
                         if (add)
                         {
                             this.players.Add(new VlcPlayer());
@@ -160,20 +160,20 @@ namespace VVVV.Nodes.VideoPlayer
                         {
                             this.players[i].Start();
                         }*/
-                    }
-                    else
-                    {
-                        if (add)
-                        {
-                            this.players.Add(null);
-                        }
-                        else
-                        {
-                            //Just set a null here
-                            this.players[i] = null;
-                        }
+                    //}
+                    //else
+                    //{
+                    //    if (add)
+                    //    {
+                    //        this.players.Add(null);
+                    //    }
+                    //    else
+                    //    {
+                    //        //Just set a null here
+                    //        this.players[i] = null;
+                    //    }
 
-                    }
+                    //}
                 }
 
             }

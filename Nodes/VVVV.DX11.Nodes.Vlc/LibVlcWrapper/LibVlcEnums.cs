@@ -68,6 +68,7 @@ namespace LibVlcWrapper
       libvlc_MediaPlayerTitleChanged,
       libvlc_MediaPlayerSnapshotTaken,
       libvlc_MediaPlayerLengthChanged,
+      libvlc_MediaPlayerVout,
 
       libvlc_MediaListItemAdded = 0x200,
       libvlc_MediaListWillAddItem,
