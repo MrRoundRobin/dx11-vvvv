@@ -143,7 +143,7 @@ namespace VVVV.Nodes.VideoPlayer
 
                 if (needreset)
                 {
-                    if (File.Exists(path))
+                    if (path.Contains("://") || File.Exists(path))
                     {
                         if (add)
                         {

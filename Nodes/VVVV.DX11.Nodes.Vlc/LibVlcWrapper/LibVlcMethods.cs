@@ -289,6 +289,12 @@ namespace LibVlcWrapper
         [DllImport("libvlc", CallingConvention = CallingConvention.Cdecl)]
         public static extern int libvlc_media_get_tracks_info(IntPtr media, out IntPtr tracks);
 
+        [DllImport("libvlc", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int libvlc_media_parse_with_options(IntPtr p_md, libvlc_media_parse_flag_t parse_flag, int timeout);
+
+        [DllImport("libvlc", CallingConvention = CallingConvention.Cdecl)]
+        public static extern libvlc_media_parsed_status_t libvlc_media_get_parsed_status(IntPtr p_md);
+
         #endregion
 
         #region libvlc_media_discoverer.h

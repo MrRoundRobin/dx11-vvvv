@@ -19,10 +19,10 @@ namespace VVVV.DX11.Vlc.Player
                 if (_libvlc == IntPtr.Zero)
                 {
                     string[] argv = {
-					"--no-video-title",
-					"--no-one-instance",
-					"--directx-audio-speaker=5.1"
-				    };
+                    "--no-video-title",
+                    "--no-one-instance",
+                    "--directx-audio-speaker=5.1"
+                    };
                     _libvlc = LibVlcMethods.libvlc_new(argv.GetLength(0), argv);
                 }
                 return _libvlc;
@@ -34,6 +34,7 @@ namespace VVVV.DX11.Vlc.Player
         private VlcVideoLockHandlerDelegate vlcVideoLockHandlerDelegate;
         private VlcVideoUnlockHandlerDelegate vlcVideoUnlockHandlerDelegate;
         private VlcVideoDisplayHandlerDelegate vlcVideoDisplayHandlerDelegate;
+        private VlcEventHandlerDelegate vlcEventHandlerDelegate;
 
         private IntPtr media;
         private IntPtr mediaPlayer;
@@ -149,79 +150,96 @@ namespace VVVV.DX11.Vlc.Player
             vlcVideoLockHandlerDelegate = VlcVideoLockCallBack;
             vlcVideoUnlockHandlerDelegate = VlcVideoUnlockCallBack;
             vlcVideoDisplayHandlerDelegate = VlcVideoDisplayCallBack;
+            vlcEventHandlerDelegate = VlcEventHandler;
             media = new IntPtr();
 
 
             mediaPlayer = LibVlcMethods.libvlc_media_player_new(LibVLC);
             LibVlcMethods.libvlc_media_player_retain(mediaPlayer);
 
-            //Handle some VLC events!
-            VlcEventHandlerDelegate h = VlcEventHandler;
-            IntPtr ptr = Marshal.GetFunctionPointerForDelegate(h);
-            IntPtr eventManager = LibVlcMethods.libvlc_media_player_event_manager(mediaPlayer);
+            ////Handle some VLC events!
+            //VlcEventHandlerDelegate h = VlcEventHandler;
+            //IntPtr ptr = Marshal.GetFunctionPointerForDelegate(h);
+            //IntPtr eventManager = LibVlcMethods.libvlc_media_player_event_manager(mediaPlayer);
         }
 
         public void SetFileName(string file)
         {
             this.valid = false;
             this.media = this.ParseFilename(file);
-            this.FileName = file;
-            LibVlcMethods.libvlc_media_parse(media);
+            this.FileName = file.Split('|').FirstOrDefault();
 
-            IntPtr trackInfoArray;
-            int nrOfStreams;
+            if (string.IsNullOrEmpty(FileName)) return;
 
-            nrOfStreams = LibVlcMethods.libvlc_media_get_tracks_info(media, out trackInfoArray);
-
-            for (int i = 0; i < nrOfStreams; i++)
+            if (!FileName.Contains("://"))
             {
-                LibVlcWrapper.libvlc_media_track_info_t trackInfo = ((LibVlcWrapper.libvlc_media_track_info_t*)trackInfoArray)[i];
+                LibVlcMethods.libvlc_media_parse(media);
 
+                IntPtr trackInfoArray;
+                int nrOfStreams;
 
-                if (trackInfo.i_type == LibVlcWrapper.libvlc_track_type_t.libvlc_track_audio)
+                nrOfStreams = LibVlcMethods.libvlc_media_get_tracks_info(media, out trackInfoArray);
+
+                for (int i = 0; i < nrOfStreams; i++)
                 {
-                    /*br = trackInfo.audio.i_rate;
-                    ch = trackInfo.audio.i_channels;
-                    hasAudio = true;*/
+                    LibVlcWrapper.libvlc_media_track_info_t trackInfo =
+                        ((LibVlcWrapper.libvlc_media_track_info_t*) trackInfoArray)[i];
+
+
+                    if (trackInfo.i_type == LibVlcWrapper.libvlc_track_type_t.libvlc_track_audio)
+                    {
+                        /*br = trackInfo.audio.i_rate;
+                        ch = trackInfo.audio.i_channels;
+                        hasAudio = true;*/
+                    }
+                    else if (trackInfo.i_type == LibVlcWrapper.libvlc_track_type_t.libvlc_track_video)
+                    {
+                        //setting w+h is important !!!
+                        int neww = trackInfo.video.i_width;
+                        int newh = trackInfo.video.i_height;
+
+                        this.SizeChanged = this.Realloc(neww, newh);
+                        this.valid = neww > 0 && newh > 0;
+
+                        this.w = neww;
+                        this.h = newh;
+                    }
                 }
-                else if (trackInfo.i_type == LibVlcWrapper.libvlc_track_type_t.libvlc_track_video)
+
+                if (nrOfStreams > 0)
                 {
-                    //setting w+h is important !!!
-                    int neww = trackInfo.video.i_width;
-                    int newh = trackInfo.video.i_height;
-
-                    this.SizeChanged = this.Realloc(neww, newh);
-                    this.valid = neww > 0 && newh > 0;
-
-                    this.w = neww;
-                    this.h = newh;
+                    Marshal.DestroyStructure(trackInfoArray, typeof(LibVlcWrapper.libvlc_media_track_info_t*));
                 }
+
             }
-
-            if (nrOfStreams > 0)
+            else
             {
-                Marshal.DestroyStructure(trackInfoArray, typeof(LibVlcWrapper.libvlc_media_track_info_t*));
-            }
+                var eventManager = LibVlcMethods.libvlc_media_event_manager(media);
+                LibVlcMethods.libvlc_event_attach(eventManager, libvlc_event_e.libvlc_MediaParsedChanged, Marshal.GetFunctionPointerForDelegate(vlcEventHandlerDelegate), IntPtr.Zero);
 
-            
+                LibVlcMethods.libvlc_media_parse_with_options(media,
+                    libvlc_media_parse_flag_t.libvlc_media_parse_network, 0);
+            }
 
             LibVlcMethods.libvlc_media_player_stop(mediaPlayer);
+            LibVlcMethods.libvlc_media_player_set_media(mediaPlayer, media);
 
-            if (this.valid)
-            {
-                LibVlcMethods.libvlc_media_player_set_media(mediaPlayer, media);
-                LibVlcMethods.libvlc_video_set_callbacks(mediaPlayer, Marshal.GetFunctionPointerForDelegate(vlcVideoLockHandlerDelegate), Marshal.GetFunctionPointerForDelegate(vlcVideoUnlockHandlerDelegate), Marshal.GetFunctionPointerForDelegate(vlcVideoDisplayHandlerDelegate), opaqueForCallbacks);
+            if (!this.valid) return;
 
+            SetCallbacks();
 
-                int pitch = this.w * 4;
-                LibVlcMethods.libvlc_video_set_format(mediaPlayer, Encoding.UTF8.GetBytes("RV32"), this.w, this.h, pitch);
-
-                LibVlcMethods.libvlc_media_player_play(mediaPlayer);
-
-
+            LibVlcMethods.libvlc_media_player_play(mediaPlayer);
                 
-                this.fps = LibVlcMethods.libvlc_media_player_get_fps(mediaPlayer);
-            }
+            this.fps = LibVlcMethods.libvlc_media_player_get_fps(mediaPlayer);
+        }
+
+        private void SetCallbacks()
+        {
+            LibVlcMethods.libvlc_video_set_callbacks(mediaPlayer, Marshal.GetFunctionPointerForDelegate(vlcVideoLockHandlerDelegate), Marshal.GetFunctionPointerForDelegate(vlcVideoUnlockHandlerDelegate), Marshal.GetFunctionPointerForDelegate(vlcVideoDisplayHandlerDelegate), opaqueForCallbacks);
+
+
+            var pitch = w * 4;
+            LibVlcMethods.libvlc_video_set_format(mediaPlayer, Encoding.UTF8.GetBytes("RV32"), w, h, pitch);
         }
 
         public void GetStatus()
@@ -287,6 +305,30 @@ namespace VVVV.DX11.Vlc.Player
 
         private void VlcEventHandler(ref libvlc_event_t libvlc_event, IntPtr userData)
         {
+            switch (libvlc_event.type)
+            {
+                case libvlc_event_e.libvlc_MediaParsedChanged:
+                    
+                    if (!FileName.Contains("://") ||
+                        LibVlcMethods.libvlc_media_get_parsed_status(media) != libvlc_media_parsed_status_t.libvlc_media_parsed_status_done) return;
+
+                    LibVlcMethods.libvlc_video_get_size(mediaPlayer, 0, out uint x, out uint y);
+
+                    //setting w+h is important !!!
+                    var neww = Convert.ToInt32(x);
+                    var newh = Convert.ToInt32(y);
+
+                    SizeChanged = Realloc(neww, newh);
+                    valid = neww > 0 && newh > 0;
+
+                    w = neww;
+                    h = newh;
+
+                    if (valid)
+                        SetCallbacks();
+
+                    return;
+            }
         }
 
         private IntPtr ParseFilename(string fileName)
@@ -295,7 +337,7 @@ namespace VVVV.DX11.Vlc.Player
             {
                 return IntPtr.Zero;
             }
-            string[] mediaOptions = fileName.Split("|".ToCharArray());
+            string[] mediaOptions = fileName.Split('|');
             if (mediaOptions[0].TrimEnd().Length == 0 || (!mediaOptions[0].Contains("://") && !File.Exists(mediaOptions[0].TrimEnd())))
             {
                 return IntPtr.Zero;

@@ -109,64 +109,144 @@ namespace LibVlcWrapper
         [FieldOffset(4)]
         public IntPtr p_obj;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_meta_changed media_meta_changed;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_subitem_added media_subitem_added;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_duration_changed media_duration_changed;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_parsed_changed media_parsed_changed;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_freed media_freed;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_state_changed media_state_changed;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_player_position_changed media_player_position_changed;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_player_time_changed media_player_time_changed;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_player_title_changed media_player_title_changed;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_player_seekable_changed media_player_seekable_changed;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_player_pausable_changed media_player_pausable_changed;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_list_item_added media_list_item_added;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_list_will_add_item media_list_will_add_item;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_list_item_deleted media_list_item_deleted;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_list_will_delete_item media_list_will_delete_item;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_list_player_next_item_set media_list_player_next_item_set;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_player_snapshot_taken media_player_snapshot_taken;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_player_length_changed media_player_length_changed;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public vlm_media_event vlm_media_event;
 
+#if x64
+        [FieldOffset(12)]
+#else
         [FieldOffset(8)]
+#endif
         public media_player_media_changed media_player_media_changed;
     }
 

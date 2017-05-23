@@ -52,6 +52,9 @@
     <Copy SourceFiles="$(SolutionDir)\Dependencies\$(Platform)\libvlccore.dll" DestinationFolder="$(OutputPath)" />
   </Target>
 
+  <PropertyGroup Condition="'$(Platform)' == 'x64'">
+	<DefineConstant>TRACE;x64</DefineConstant>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
